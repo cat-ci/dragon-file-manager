@@ -63,6 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
             jpg: "JPEG Image",
             jpeg: "JPEG Image",
             gif: "GIF Image",
+            webp: "WebP Image",
+            ico: "Icon",
             ogg: "OGG Audio",
             mp3: "MP3 Audio",
             zip: "ZIP Archive",
@@ -94,10 +96,10 @@ document.addEventListener("DOMContentLoaded", () => {
             name.split(".").pop().toLowerCase() :
             "";
         const m = {
-            ttf: "fa-regular fa-font",
-            otf: "fa-regular fa-font",
-            woff: "fa-regular fa-font",
-            woff2: "fa-regular fa-font",
+            ttf: "fa-solid fa-font",
+            otf: "fa-solid fa-font",
+            woff: "fa-solid fa-font",
+            woff2: "fa-solid fa-font",
             txt: "fa-regular fa-file-lines",
             md: "fa-regular fa-file-lines",
             svg: "fa-regular fa-image",
@@ -105,6 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
             jpg: "fa-regular fa-image",
             jpeg: "fa-regular fa-image",
             gif: "fa-regular fa-image",
+            webp: "fa-regular fa-image",
             ogg: "fa-regular fa-file-audio",
             mp3: "fa-regular fa-file-audio",
             wav: "fa-regular fa-file-audio",
@@ -226,6 +229,35 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
         return c;
+    }
+
+    function getFontFamily(name) {
+
+        return (
+            "dfmfont_" +
+            name.replace(/[^a-zA-Z0-9]/g, "_") +
+            "_" +
+            Math.random().toString(36).slice(2, 8)
+        );
+    }
+
+    function injectFontFace(fontFamily, fontUrl, ext) {
+
+        if (document.getElementById("dfm-font-" + fontFamily)) return;
+        let format = "truetype";
+        if (ext === "otf") format = "opentype";
+        else if (ext === "woff") format = "woff";
+        else if (ext === "woff2") format = "woff2";
+        const style = document.createElement("style");
+        style.id = "dfm-font-" + fontFamily;
+        style.textContent = `
+        @font-face {
+          font-family: '${fontFamily}';
+          src: url('${fontUrl}') format('${format}');
+          font-display: swap;
+        }
+      `;
+        document.head.appendChild(style);
     }
 
     document.querySelectorAll("[root-src]").forEach((container) => {
@@ -554,7 +586,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let previewElem = null;
             let detailsExtra = [];
             if (
-                ["png", "jpg", "jpeg", "gif", "svg"].includes(ext) &&
+                ["png", "jpg", "jpeg", "gif", "svg", "webp", "ico"].includes(ext) &&
                 fileUrl
             ) {
                 previewElem = document.createElement("img");
@@ -563,7 +595,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 previewElem.className = "dfm-details-img";
                 previewElem.onload = function() {
                     if (
-                        ["png", "jpg", "jpeg", "gif"].includes(ext) &&
+                        ["png", "jpg", "jpeg", "gif", "webp"].includes(ext) &&
                         previewElem.naturalWidth &&
                         previewElem.naturalHeight
                     ) {
@@ -576,6 +608,20 @@ document.addEventListener("DOMContentLoaded", () => {
                         updateDetailsList();
                     }
                 };
+            } else if (
+                ["ttf", "otf", "woff", "woff2"].includes(ext) &&
+                fileUrl
+            ) {
+
+                const fontFamily = getFontFamily(name);
+                injectFontFace(fontFamily, fileUrl, ext);
+                previewElem = document.createElement("div");
+                previewElem.className = "dfm-details-font-preview";
+                previewElem.textContent = "The quick brown fox jumps over the lazy dog";
+                previewElem.style.fontFamily = `'${fontFamily}', sans-serif`;
+                previewElem.style.fontSize = "1.5em";
+                previewElem.style.padding = "0.5em 0";
+                previewElem.style.overflowWrap = "break-word";
             } else if (
                 ["mp4", "webm", "mov", "avi"].includes(ext) &&
                 fileUrl
@@ -879,13 +925,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     item.className = "dfm-grid-item file";
                     let preview = null;
                     if (
-                        ["png", "jpg", "jpeg", "gif", "svg"].includes(ext) &&
+                        ["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(ext) &&
                         fileUrl
                     ) {
                         preview = document.createElement("img");
                         preview.src = fileUrl;
                         preview.alt = fname;
                         preview.className = "dfm-grid-img";
+                    } else if (
+                        ["ttf", "otf", "woff", "woff2"].includes(ext) &&
+                        fileUrl
+                    ) {
+
+                        const fontFamily = getFontFamily(fname);
+                        injectFontFace(fontFamily, fileUrl, ext);
+                        preview = document.createElement("div");
+                        preview.className = "dfm-grid-font-preview";
+                        preview.textContent = "ABC";
+                        preview.style.fontFamily = `'${fontFamily}', sans-serif`;
+                        preview.style.fontSize = "2em";
+                        preview.style.textAlign = "center";
+                        preview.style.padding = "0.2em 0";
+                        preview.style.overflowWrap = "break-word";
                     } else {
                         preview = document.createElement("div");
                         preview.className = "dfm-grid-icon";
